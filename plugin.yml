@@ -1,0 +1,12 @@
+name: SelfGroup
+main: me.XxTRANEExX.SelfGroup.SelfGroup
+version: 2.0
+description: >
+             Self Group
+commands:
+  yetifaction:
+    description: Interact with the SelfGroup plugin
+    usage: "Usage: '/yetifaction help'"
+  yf:
+    description: Interact with the SelfGroup plugin
+    usage: "Usage: '/yf help'"
