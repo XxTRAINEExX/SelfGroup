@@ -1,4 +1,4 @@
-package me.XxTRANEExX.SelfGroup;
+package net.yeticraft.xxtraineexx.SelfGroup;
 
 import java.util.logging.Logger;
 

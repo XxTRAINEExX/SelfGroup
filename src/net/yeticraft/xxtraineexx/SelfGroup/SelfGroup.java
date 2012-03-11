@@ -1,5 +1,7 @@
-package me.XxTRANEExX.SelfGroup;
+package net.yeticraft.xxtraineexx.SelfGroup;
 
+
+import net.yeticraft.xxtraineexx.friendsandfoes.utilities.FFConfigHandler;
 
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -10,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.tehkode.permissions.*;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
-import info.kanlaki101.blockprotection.utilities.BPConfigHandler;
+
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -184,9 +186,9 @@ public class SelfGroup extends JavaPlugin {
             		this.logger.info("User %s has left the %s group", sender.getName(), group);
         			pUser.removeGroup(group);
         			// Remove all friends to stop cheaters
-        			BPConfigHandler.loadFriendsList();
-        			BPConfigHandler.friendslist.set(pUser.getName(), null); //Delete it
-        			BPConfigHandler.saveFriendsList(); //Save
+        			FFConfigHandler.loadFriendsList();
+        			FFConfigHandler.friendslist.set(pUser.getName(), null); //Delete it
+        			FFConfigHandler.saveFriendsList(); //Save
         			return true;
         		}
         	}
