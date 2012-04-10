@@ -1,12 +1,12 @@
 name: SelfGroup
 main: net.yeticraft.xxtraineexx.SelfGroup.SelfGroup
-version: 2.0
+version: 3.0
 description: >
-             Self Group
+             YetiFaction
 commands:
   yetifaction:
-    description: Interact with the SelfGroup plugin
+    description: Primary command used to access YetiFaction
     usage: "Usage: '/yetifaction help'"
   yf:
-    description: Interact with the SelfGroup plugin
+    description: Primary command used to access YetiFaction
     usage: "Usage: '/yf help'"

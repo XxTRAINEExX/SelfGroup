@@ -72,11 +72,12 @@ public class SelfGroup extends JavaPlugin {
     	valid_groups = new ArrayList<String>();
     	for (int i = 0; i < grps.size(); i++)
     	{
-    		// valid_groups.add(grps.get(i).toLowerCase()); // Removed so case sensitivity can come in to play    		
-    		valid_groups.add(grps.get(i));
+    		valid_groups.add(grps.get(i));    		
+    		
     	}
     	
     	switch_delay = config.getInt("switch-delay", 1);
+    	
     	if (switch_delay == 1)
     	{
     		config.set("switch-delay", 1);
@@ -95,106 +96,164 @@ public class SelfGroup extends JavaPlugin {
 		PermissionManager pex = PermissionsEx.getPermissionManager();
 		PermissionUser pUser = pex.getUser(sender.getName());
         Boolean group_valid = false;
-		// group = group.toLowerCase(); //Removed this line to bring case sensitivity back in to play
+		
+        // Checking to see if they are allowed to swap groups. If not, return out.
+     	if (!checkSwitchDelay(sender, group)) return false;
         
+        // Checking to see if the player is already in this group. If so, return out.
+		if (pUser.inGroup(group))
+		{
+			Util.reply(sender, "Sorry, you're already in the faction %s", group);
+			return false;
+		}
+        
+        // Looping to see if the group they provided is a valid group.
         for (int i = 0; i < valid_groups.size(); i++)
         {
-        	if (valid_groups.get(i).compareTo(group) == 0)
+        	if (valid_groups.get(i).equalsIgnoreCase(group))
         	{
-        		if (pUser.inGroup(group))
-        		{
-        			Util.reply(sender, "Sorry, you're already in the group %s", group);
-        			return false;
-        		}
         		group_valid = true;
+        		group=valid_groups.get(i);
         	}
-        	else if (pUser.inGroup(valid_groups.get(i)))
-        	{
-        		Util.reply(sender, "Unable to join group %s because you're already in %s",
-        				   group, valid_groups.get(i));
-        		return false;
-        	}
+        	
         }
         
+        // do some actions if the group is valid for join
         if (group_valid)
         {
     		String now = date_format.format(Calendar.getInstance().getTime());
     		config.set("change_times."+sender.getName(), now);
     		config.set("last_groups."+sender.getName(), group);
     		saveConfig();
-    		this.logger.info("User %s has joined the %s group", sender.getName(), group);
+    		this.logger.info("User %s has joined the %s faction", sender.getName(), group);
         	pUser.addGroup(group);
         	return true;
         }
         else
         {
-        	Util.reply(sender, "Sorry, %s is not a valid group name", group);
+        	Util.reply(sender, "Sorry, %s is not a valid faction name", group);
         	return false;
         }
+        
 	}
+	
+	
 	
 	public Boolean LeaveGroup(CommandSender sender, String group)
 	{
 		PermissionManager pex = PermissionsEx.getPermissionManager();
 		PermissionUser pUser = pex.getUser(sender.getName());
-		Date now = Calendar.getInstance().getTime();
-		// group = group.toLowerCase(); //Removed this line to bring case sensitivity back in to play
+		Boolean group_valid = false;
 		
+		// Checking to see if they are allowed to swap groups. If not, return out.
+		if (!checkSwitchDelay(sender, group)) return false;
+		
+		// Check to see if they are in this faction. If not... they cant leave. Return out.
+		if (!pUser.inGroup(group))
+		{
+			Util.reply(sender, "Sorry, you're not in the faction %s", group);
+			return false;
+		}
+		
+		// Looping to see if this is a valid group to leave. If so, set the flag.
+        for (int i = 0; i < valid_groups.size(); i++)
+        {
+        	if (valid_groups.get(i).equalsIgnoreCase(group))
+        	{
+        		 group_valid = true;
+        		 group=valid_groups.get(i);
+        	}
+        }
+        
+        // doing some actions on the flag
+        if (group_valid){
+        	String now = date_format.format(Calendar.getInstance().getTime());
+    		config.set("change_times."+sender.getName(), now);
+    		config.set("last_groups."+sender.getName(), group);
+    		saveConfig();
+			
+    		this.logger.info("User %s has left the %s faction", sender.getName(), group);
+			pUser.removeGroup(group);
+			
+			// Remove all friends to stop cheaters
+			FFConfigHandler.loadFriendsList();
+			FFConfigHandler.friendslist.set(pUser.getName(), null); //Delete it
+			FFConfigHandler.saveFriendsList(); //Save
+			return true;
+        }
+        else{
+        	// If we made it here, we didn't find the group they tried to remove
+            Util.reply(sender, "Sorry, %s is not a valid faction", group);
+            return false;
+        }
+        
+        
+        
+	}
+	
+	public boolean checkSwitchDelay(CommandSender sender, String group){
+		
+		// This method will return TRUE if the player is allowed to switch factions
+		// It will return FALSE if they are not allowed to swap factions.
+		// The faction check will see if they have a previously stored "swap time"
+		// If so, it will verify it meets the switch delay.
+		
+		Date now = Calendar.getInstance().getTime();
 		// Check the last time the user made an update and see if they've waited long enough
 		String last_updated = config.getString("change_times."+sender.getName());
 		//String last_group = config.getString("last_groups."+sender.getName());
 		if (last_updated != null)
 		{
-		try
-		{
-			Date last = date_format.parse(last_updated);
-			long last_seconds = last.getTime() / 1000; // seconds since epoch for last
-			long now_seconds = now.getTime() / 1000;  // seconds since epoch for now
-			// seconds needed for switch delay = 
-			// delayed days x hours in a day x mins in hour x secs in min 
-			long need_millis = (long)switch_delay * 24 * 60 * 60;
-			if ((now_seconds - last_seconds) < need_millis)
+		
+			try
 			{
-				long still_need = need_millis - (now_seconds - last_seconds);
-				String msg = "You just joined group " + group + 
-						" so you have to wait.  Try again in:";
-				long need_days = still_need / (24 * 60 * 60);
-				still_need = still_need % (24 * 60 * 60);
-				long need_hours = still_need / (60 * 60);
-				still_need = still_need % (60 * 60);
-				long need_minutes = still_need / 60;
-				still_need = still_need % 60;
-				msg += need_days + "days, " + need_hours + "hrs, " 
-						+ need_minutes + "min, and " + still_need + "s";
-				Util.reply(sender, msg);
-				return false;
+				Date last = date_format.parse(last_updated);
+				long last_seconds = last.getTime() / 1000; // seconds since epoch for last
+				long now_seconds = now.getTime() / 1000;  // seconds since epoch for now
+				// seconds needed for switch delay = 
+				// delayed days x hours in a day x mins in hour x secs in min 
+				long need_millis = (long)switch_delay * 24 * 60 * 60;
+				if ((now_seconds - last_seconds) < need_millis)
+				{
+					long still_need = need_millis - (now_seconds - last_seconds);
+					String msg = "You have already left or joined a faction in the past "+ switch_delay + " days.  Try again in:";
+					long need_days = still_need / (24 * 60 * 60);
+					still_need = still_need % (24 * 60 * 60);
+					long need_hours = still_need / (60 * 60);
+					still_need = still_need % (60 * 60);
+					long need_minutes = still_need / 60;
+					still_need = still_need % 60;
+					msg += need_days + "days, " + need_hours + "hrs, " 
+							+ need_minutes + "min, and " + still_need + "s";
+					Util.reply(sender, msg);
+					return false;
+				}
 			}
-		}
 		catch (ParseException pe) { /*ignore if it didn't parse */}
+		
 		}
+		
+		return true;
+		
+	}
+	
+	public void checkGroup(CommandSender sender)
+	{
+		PermissionManager pex = PermissionsEx.getPermissionManager();
+		PermissionUser pUser = pex.getUser(sender.getName());
+		
         for (int i = 0; i < valid_groups.size(); i++)
         {
-        	if (valid_groups.get(i).compareTo(group) == 0)
+        	if (pUser.inGroup(valid_groups.get(i)))
         	{
-        		if (!pUser.inGroup(group))
-        		{
-        			Util.reply(sender, "Sorry, you're not in the group %s", group);
-        			return false;
-        		}
-        		else
-        		{
-            		this.logger.info("User %s has left the %s group", sender.getName(), group);
-        			pUser.removeGroup(group);
-        			// Remove all friends to stop cheaters
-        			FFConfigHandler.loadFriendsList();
-        			FFConfigHandler.friendslist.set(pUser.getName(), null); //Delete it
-        			FFConfigHandler.saveFriendsList(); //Save
-        			return true;
-        		}
+        		Util.reply(sender, "You are currently in the " + valid_groups.get(i) + " faction.");
+        		return;
         	}
+        	
         }
-        // If we made it here, we didn't find the group they tried to remove
-        Util.reply(sender, "Sorry, %s is not a valid group", group);
-        return false;
+        
+        Util.reply(sender, "You are not currently in a faction.");
+		return;
+		
 	}
 }
