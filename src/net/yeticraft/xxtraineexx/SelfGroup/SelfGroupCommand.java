@@ -19,6 +19,7 @@ public class SelfGroupCommand implements CommandExecutor {
 		LIST,
 		JOIN,
 		LEAVE,
+		CHECK,
 		UNKNOWN;
 		
 		private static SubCommand toSubCommand(String str) {
@@ -44,15 +45,17 @@ public class SelfGroupCommand implements CommandExecutor {
   	
     	switch (SubCommand.toSubCommand(args[0].toUpperCase())) {
 	    	case HELP:
-	    		Util.reply(sender, "YetiFaction plugin help:");
+	    		Util.reply(sender, "YetiFaction help:");
 	    		Util.reply(sender, " /%s help", command.getName());
 	    		Util.reply(sender, "     Shows this help page");
 	    		Util.reply(sender, " /%s list", command.getName());
-	    		Util.reply(sender, "     Lists all available groups");
+	    		Util.reply(sender, "     Lists all available factions");
 	    		Util.reply(sender, " /%s join <group>", command.getName());
-	    		Util.reply(sender, "     Joins the given group");
+	    		Util.reply(sender, "     Joins the given faction");
+	    		Util.reply(sender, " /%s check", command.getName());
+	    		Util.reply(sender, "     checks your current faction status");
 	    		Util.reply(sender, " /%s leave <group>", command.getName());
-	    		Util.reply(sender, "     leaves the given group");
+	    		Util.reply(sender, "     leaves the given faction");
 	    		break;
 	    	case LIST:
 	    		ArrayList<String> groups = plugin.getGroups();
@@ -85,6 +88,9 @@ public class SelfGroupCommand implements CommandExecutor {
 	    			Util.reply(sender, "Your friends list has been cleared.");
 	    		}
 	    		break;
+	    	case CHECK:
+				plugin.checkGroup(sender);
+				break;
 	    	case UNKNOWN:
 				Util.replyError(sender, "Unknown command. Use /yf help to list available commands.");
     	}
