@@ -100,13 +100,18 @@ public class SelfGroup extends JavaPlugin {
         // Checking to see if they are allowed to swap groups. If not, return out.
      	if (!checkSwitchDelay(sender, group)) return false;
         
-        // Checking to see if the player is already in this group. If so, return out.
-		if (pUser.inGroup(group))
-		{
-			Util.reply(sender, "Sorry, you're already in the faction %s", group);
-			return false;
-		}
         
+		// Looping to see if they are already in a group
+        for (int i = 0; i < valid_groups.size(); i++)
+        {
+        	if (pUser.inGroup(valid_groups.get(i)))
+        	{
+        		Util.reply(sender, "Sorry, you're already in the faction %s", valid_groups.get(i));
+        		return false;
+        	}
+        	
+        }
+		
         // Looping to see if the group they provided is a valid group.
         for (int i = 0; i < valid_groups.size(); i++)
         {
@@ -117,6 +122,7 @@ public class SelfGroup extends JavaPlugin {
         	}
         	
         }
+        
         
         // do some actions if the group is valid for join
         if (group_valid)
